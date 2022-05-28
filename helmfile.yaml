@@ -19,6 +19,7 @@ releases:
       hosts:
         - host: {{ requiredEnv "FRONTEND_INGRESS_HOST" }}
           paths: ["/"]
+          # pathType: Prefix
     replicaCount: {{ requiredEnv "FRONTEND_REPLICA_COUNT" }}
     resources:
       limits:
@@ -28,41 +29,14 @@ releases:
       enabled: true
       minReplicas: {{ requiredEnv "FRONTEND_REPLICA_COUNT" }}
       maxReplicas: {{ requiredEnv "FRONTEND_REPLICA_COUNT" | add 3 }}
-      targetCPUUtilizationPercentage: 80
+      cpuTarget: Utilization
+      cpuUtilizationPercentage: 80
   set:
   - name: envFile
     file: .env
   - name: extraEnvFile
     value: |
-      REACT_APP_API_ENDPOINT=https://{{ requiredEnv "API_INGRESS_HOST" }}
-
-- name: api
-  namespace: todo
-  chart: .helm-charts/todo-api
-  values:
-  - ingress:
-      enabled: true
-      annotations:
-        kubernetes.io/ingress.class: nginx
-      hosts:
-        - host: {{ requiredEnv "API_INGRESS_HOST" }}
-          paths: ["/"]
-    replicaCount: {{ requiredEnv "API_REPLICA_COUNT" }}
-    resources:
-      limits:
-        cpu: 300m
-        memory: 256Mi
-    autoscaling:
-      enabled: true
-      minReplicas: {{ requiredEnv "API_REPLICA_COUNT" }}
-      maxReplicas: {{ requiredEnv "API_REPLICA_COUNT" | add 6 }}
-      targetCPUUtilizationPercentage: 80
-  set:
-  - name: envFile
-    file: .env
-  - name: extraEnvFile
-    value: |
-      DB_CONNECTION=mongodb://{{ requiredEnv "DB_USER" }}:{{ requiredEnv "DB_PASS" }}@db-mongodb:27017/{{ requiredEnv "DB_NAME" }}
+      REACT_APP_API_ENDPOINT=http://{{ requiredEnv "API_INGRESS_HOST" }}
 # docs: https://github.com/bitnami/charts/blob/master/bitnami/mongodb/values.yaml
 - name: db
   namespace: todo
@@ -90,3 +64,32 @@ releases:
       limits:
         cpu: 300m
         memory: 512Mi
+- name: api
+  namespace: todo
+  chart: .helm-charts/todo-api
+  values:
+  - ingress:
+      enabled: true
+      annotations:
+        kubernetes.io/ingress.class: nginx
+      hosts:
+        - host: {{ requiredEnv "API_INGRESS_HOST" }}
+          paths: ["/"]
+          # pathType: Prefix
+    replicaCount: {{ requiredEnv "API_REPLICA_COUNT" }}
+    resources:
+      limits:
+        cpu: 300m
+        memory: 256Mi
+    autoscaling:
+      enabled: true
+      minReplicas: {{ requiredEnv "API_REPLICA_COUNT" }}
+      maxReplicas: {{ requiredEnv "API_REPLICA_COUNT" | add 6 }}
+      cpuTarget: Utilization
+      cpuUtilizationPercentage: 80
+  set:
+  - name: envFile
+    file: .env
+  - name: extraEnvFile
+    value: |
+      DB_CONNECTION=mongodb://{{ requiredEnv "DB_USER" }}:{{ requiredEnv "DB_PASS" }}@db-mongodb:27017/{{ requiredEnv "DB_NAME" }}

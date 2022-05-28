@@ -45,10 +45,14 @@ spec:
             httpGet:
               path: /healthz
               port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /api/task
               port: http
+            initialDelaySeconds: 7
+            periodSeconds: 10
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

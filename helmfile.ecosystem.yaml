@@ -1,6 +1,10 @@
 repositories:
-- name: stable
-  url: https://kubernetes-charts.storage.googleapis.com
+- name: bitnami
+  url: https://charts.bitnami.com/bitnami
+- name: metrics-server
+  url: https://kubernetes-sigs.github.io/metrics-server/
+- name: grafana
+  url: https://grafana.github.io/helm-charts
 helmDefaults:
   tillerless: true
   verify: false
@@ -10,19 +14,21 @@ helmDefaults:
 releases:
 - name: metrics-server
   namespace: kube-system
-  chart: stable/metrics-server
-  version: 2.11.2
+  chart: metrics-server/metrics-server
+  version: 3.8.0
+  values:
+  - args:
+    - --kubelet-insecure-tls
 
 - name: ingress
   namespace: kube-system
-  chart: stable/nginx-ingress
-  version: 1.40.1
+  chart: bitnami/nginx-ingress-controller
+  version: 9.2.3
   values:
   - rbac:
       create: true
-    # controller:
-    #   extraArgs:
+    controller:
+      extraArgs:
     ## Depends on your cloud-provider. However, locally, it is must
-    #     default-ssl-certificate: namespace/secret-tls-wildcard
-
+        default-ssl-certificate: kube-system/ingress-tls-cert
  
